@@ -213,3 +213,75 @@ week6/*/*.jsonl
 week6/*.pth
 week6/*.joblib
 week8/*.pth
+
+# BenefitsAI project-specific ignores
+
+# Raw and processed data
+rag/benefits_ai_platform/data/01_raw/*
+rag/benefits_ai_platform/data/02_preprocessed/*
+rag/benefits_ai_platform/data/03_features/*
+rag/benefits_ai_platform/data/04_predictions/*
+
+# Keep data folder structure
+!rag/benefits_ai_platform/data/01_raw/.gitkeep
+!rag/benefits_ai_platform/data/02_preprocessed/.gitkeep
+!rag/benefits_ai_platform/data/03_features/.gitkeep
+!rag/benefits_ai_platform/data/04_predictions/.gitkeep
+
+# Large model and experiment artifacts
+rag/benefits_ai_platform/models/*
+rag/benefits_ai_platform/artifacts/*
+rag/benefits_ai_platform/mlruns/
+rag/benefits_ai_platform/mlartifacts/
+
+# Keep model/artifact folders
+!rag/benefits_ai_platform/models/.gitkeep
+!rag/benefits_ai_platform/artifacts/.gitkeep
+
+# Vector databases and embedding indexes
+rag/benefits_ai_platform/vector_db/
+rag/benefits_ai_platform/chroma_db/
+rag/benefits_ai_platform/faiss_index/
+rag/benefits_ai_platform/*.index
+
+# Secrets and cloud credentials
+rag/benefits_ai_platform/.env
+rag/benefits_ai_platform/.env.*
+!rag/benefits_ai_platform/.env.example
+rag/benefits_ai_platform/secrets/
+rag/benefits_ai_platform/credentials/
+rag/benefits_ai_platform/*service-account*.json
+rag/benefits_ai_platform/*google-credentials*.json
+rag/benefits_ai_platform/*gcp-credentials*.json
+rag/benefits_ai_platform/kaggle.json
+
+# App and API logs
+rag/benefits_ai_platform/logs/
+rag/benefits_ai_platform/*.log
+rag/benefits_ai_platform/uvicorn*.log
+
+# Generated reports and figures
+rag/benefits_ai_platform/reports/figures/*
+rag/benefits_ai_platform/reports/*.html
+rag/benefits_ai_platform/reports/*.pdf
+
+# Keep reports folder structure
+!rag/benefits_ai_platform/reports/figures/.gitkeep
+
+# Streamlit secrets
+rag/benefits_ai_platform/.streamlit/secrets.toml
+
+# Temporary notebook exports
+rag/benefits_ai_platform/*.nbconvert.ipynb
+rag/benefits_ai_platform/notebooks/*.nbconvert.ipynb
+
+# Test/cache files inside BenefitsAI
+rag/benefits_ai_platform/.pytest_cache/
+rag/benefits_ai_platform/.ruff_cache/
+rag/benefits_ai_platform/.mypy_cache/
+rag/benefits_ai_platform/htmlcov/
+rag/benefits_ai_platform/.coverage
+
+# Docker build archives
+rag/benefits_ai_platform/*.tar
+rag/benefits_ai_platform/*.tar.gz
