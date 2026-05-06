@@ -1,15 +1,40 @@
+# Core data science
 pandas
 numpy
 scikit-learn
+xgboost
+joblib
+
+# Visualization
 matplotlib
+seaborn
+
+# Notebook environment
+jupyter
 jupyterlab
+ipykernel
 nbformat
+
+# RAG and embeddings
 sentence-transformers
 faiss-cpu
+
+# LLM / Gemini
+google-generativeai
+python-dotenv
+
+# API and app
 fastapi
 uvicorn
 streamlit
-python-dotenv
 pydantic
+
+# MLOps / experiment tracking
 mlflow
+
+# Testing
 pytest
+
+# Utilities
+tqdm
+requests

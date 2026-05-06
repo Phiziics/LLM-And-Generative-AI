@@ -49,7 +49,7 @@ Used for:
 5. Generating plan summary documents for RAG
 6. Eligibility and coverage question answering
 
-Files used:
+Raw files:
 
 ```text
 data/01_raw/cms_exchange_pufs/
