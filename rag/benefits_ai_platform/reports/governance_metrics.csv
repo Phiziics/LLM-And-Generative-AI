@@ -1,0 +1,2 @@
+total_audit_events,rag_events,claim_prediction_events,redaction_applied_rate,human_review_required_count,average_confidence_score
+7,2,5,1.0,0,0.26663348253261465
