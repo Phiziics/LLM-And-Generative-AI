@@ -1,0 +1,32 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: benefitsai-api
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./vector_db:/app/vector_db
+      - ./reports:/app/reports
+    command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: benefitsai-streamlit
+    ports:
+      - "8501:8501"
+    environment:
+      - PYTHONPATH=/app
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./vector_db:/app/vector_db
+      - ./reports:/app/reports
+    command: streamlit run src/app/streamlit_app.py --server.address 0.0.0.0 --server.port 8501
