@@ -2,9 +2,21 @@
 
 ## Introduction
 
-BenefitsAI is an AI/ML project designed for health insurance and benefits administration workflows. The project combines real public healthcare and insurance data with machine learning, retrieval-augmented generation, and governance controls to support benefits document search, claims intelligence, eligibility analysis, and audit-ready AI usage.
+BenefitsAI is an AI/ML project designed for health insurance and benefits administration workflows. The project combines real public healthcare and insurance data with machine learning, retrieval-augmented generation, API development, dashboarding, and governance controls.
 
-This project is built to demonstrate production-style AI/ML engineering for regulated benefits operations, including claims analytics, high-cost claim prediction, benefits plan retrieval, source-backed question answering, model documentation, and responsible AI governance.
+The system supports:
+
+1. Benefits plan retrieval
+2. Source-backed benefits question answering
+3. High-cost claim risk prediction
+4. Audit logging
+5. PII/PHI-style redaction
+6. Governance documentation
+7. FastAPI and Streamlit deployment
+
+This project is built to demonstrate production-style AI/ML engineering for regulated benefits operations.
+
+---
 
 ## Problem
 
@@ -12,7 +24,7 @@ Benefits administrators, third-party administrators, employers, unions, and trus
 
 These workflows are repetitive, time-consuming, and sensitive because they involve healthcare, insurance, and benefits data.
 
-The goal of BenefitsAI is to help internal teams:
+BenefitsAI helps internal teams:
 
 1. Search and understand benefits plan information
 2. Answer plan and eligibility questions with source-backed retrieval
@@ -21,16 +33,25 @@ The goal of BenefitsAI is to help internal teams:
 5. Maintain audit-ready logs for AI and ML system activity
 6. Demonstrate privacy, security, and governance awareness
 
+---
+
 ## Project Goals
 
 1. Use real public healthcare and insurance datasets
 2. Clean and prepare CMS Exchange plan data
 3. Clean and prepare CMS synthetic Medicare claims data
 4. Build a high-cost claims risk model
-5. Build a benefits document RAG assistant
-6. Add audit logging and governance controls
-7. Prepare the system for FastAPI and Streamlit deployment
-8. Document the project like a production AI/ML system
+5. Build a benefits document RAG retrieval system
+6. Add PII/PHI-style redaction
+7. Add audit logging
+8. Create governance documentation
+9. Build a FastAPI backend
+10. Build a Streamlit dashboard
+11. Add tests
+12. Add Docker support
+13. Document the project like a production AI/ML system
+
+---
 
 ## Data Sources
 
