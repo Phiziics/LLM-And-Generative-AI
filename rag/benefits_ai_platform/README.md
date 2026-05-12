@@ -1,6 +1,3 @@
-Copy and paste this full version into `README.md`.
-
-````markdown
 # BenefitsAI: Secure Claims, Eligibility, and Benefits Intelligence Platform
 
 ## Introduction
@@ -78,7 +75,6 @@ data/01_raw/cms_exchange_pufs/
     plan_attributes_puf_2026.zip
     benefits_cost_sharing_puf_2026.zip
     rate_puf_2026.zip
-````
 
 Processed outputs:
 
