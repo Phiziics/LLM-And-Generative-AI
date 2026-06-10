@@ -1,4 +1,4 @@
-# Import libraries for building the dashboard, loading the model, scoring data, and handling features
+# Import libraries for building the dashboard, loading artifacts, validating data, and scoring records
 
 import streamlit as st
 import pandas as pd
@@ -45,11 +45,10 @@ st.warning(
 
 @st.cache_resource
 def load_model():
-    # Load the production HistGradientBoosting pipeline saved from Notebook 03
+    # Load the production model pipeline saved from Notebook 03
 
     model_path = "models/production_denial_risk_model.joblib"
-    model = joblib.load(model_path)
-    return model
+    return joblib.load(model_path)
 
 
 # Load the saved production threshold
@@ -59,14 +58,24 @@ def load_threshold():
     # Load the selected probability threshold saved from Notebook 03
 
     threshold_path = "models/production_threshold.joblib"
-    threshold = joblib.load(threshold_path)
-    return threshold
+    return joblib.load(threshold_path)
 
 
-# Load model and threshold
+# Load the saved top HCPCS codes used during training
+
+@st.cache_resource
+def load_top_hcpcs_codes():
+    # Load the top HCPCS codes so the app can recreate the same grouping logic used in training
+
+    top_hcpcs_path = "models/top_hcpcs_codes.joblib"
+    return joblib.load(top_hcpcs_path)
+
+
+# Load production artifacts
 
 model = load_model()
 threshold = load_threshold()
+top_hcpcs_codes = load_top_hcpcs_codes()
 
 
 # Display model information
@@ -74,7 +83,7 @@ threshold = load_threshold()
 st.info(f"Production model: HistGradientBoosting | Current threshold: {threshold:.2f}")
 
 
-# Define required columns from uploaded CSV
+# Define raw columns required from uploaded CSV
 
 required_columns = [
     "provider_state",
@@ -93,7 +102,29 @@ required_columns = [
 ]
 
 
-# Define feature columns expected by the production model
+# Define expected raw datatypes for validation
+
+numeric_columns = [
+    "total_beneficiaries",
+    "total_services",
+    "total_beneficiary_day_services",
+    "avg_submitted_charge",
+    "avg_medicare_allowed_amount",
+    "avg_medicare_payment_amount",
+    "avg_medicare_standardized_amount"
+]
+
+categorical_columns = [
+    "provider_state",
+    "provider_type",
+    "medicare_participating",
+    "hcpcs_code",
+    "is_drug",
+    "place_of_service"
+]
+
+
+# Define final model features expected by the saved pipeline
 
 model_features = [
     "provider_state",
@@ -119,27 +150,87 @@ model_features = [
 ]
 
 
-# Create app-side features to match Notebook 03 feature engineering
+# Validate uploaded dataframe columns
 
-def create_model_features(input_df):
-    # Copy uploaded data so original data remains unchanged
+def validate_required_columns(input_df):
+    # Check whether all required raw columns are present in the uploaded CSV
+
+    missing_columns = [col for col in required_columns if col not in input_df.columns]
+
+    if missing_columns:
+        return False, missing_columns
+
+    return True, []
+
+
+# Convert uploaded columns to expected datatypes
+
+def convert_datatypes(input_df):
+    # Convert uploaded columns to the expected model datatypes
+
+    cleaned_df = input_df.copy()
+
+    for col in categorical_columns:
+        cleaned_df[col] = cleaned_df[col].astype(str).str.strip()
+
+    for col in numeric_columns:
+        cleaned_df[col] = pd.to_numeric(cleaned_df[col], errors="coerce")
+
+    return cleaned_df
+
+
+# Validate numeric columns after conversion
+
+def validate_numeric_values(input_df):
+    # Check whether numeric fields contain missing values after conversion
+
+    missing_numeric_counts = input_df[numeric_columns].isna().sum()
+
+    invalid_numeric_columns = missing_numeric_counts[missing_numeric_counts > 0]
+
+    if len(invalid_numeric_columns) > 0:
+        return False, invalid_numeric_columns
+
+    return True, invalid_numeric_columns
+
+
+# Validate that numeric values are non-negative
+
+def validate_non_negative_values(input_df):
+    # Check whether numeric model fields contain negative values
+
+    negative_counts = {}
+
+    for col in numeric_columns:
+        negative_count = (input_df[col] < 0).sum()
+
+        if negative_count > 0:
+            negative_counts[col] = int(negative_count)
+
+    if negative_counts:
+        return False, negative_counts
+
+    return True, {}
+
+
+# Create model features
+
+def create_model_features(input_df, top_hcpcs_codes):
+    # Create the same backend features used during model training
 
     app_df = input_df.copy()
 
 
-    # Convert HCPCS code to string for consistent grouping
+    # Group HCPCS codes using the saved top 500 codes from training
 
-    app_df["hcpcs_code"] = app_df["hcpcs_code"].astype(str)
-
-
-    # Create grouped HCPCS code feature
-    # Note: In the notebook, top 500 HCPCS codes were kept and others were grouped.
-    # For the app demo, unseen codes will still be handled by OneHotEncoder(handle_unknown="ignore").
-
-    app_df["hcpcs_code_grouped"] = app_df["hcpcs_code"]
+    app_df["hcpcs_code_grouped"] = np.where(
+        app_df["hcpcs_code"].isin(top_hcpcs_codes),
+        app_df["hcpcs_code"],
+        "OTHER"
+    )
 
 
-    # Create log-transformed numeric features to match Notebook 03
+    # Create log-transformed numeric features
 
     app_df["log_total_services"] = np.log1p(app_df["total_services"])
     app_df["log_total_beneficiaries"] = np.log1p(app_df["total_beneficiaries"])
@@ -151,7 +242,7 @@ def create_model_features(input_df):
     app_df["log_avg_medicare_standardized_amount"] = np.log1p(app_df["avg_medicare_standardized_amount"])
 
 
-    # Return only the columns expected by the production model
+    # Return only the features expected by the production pipeline
 
     return app_df[model_features]
 
@@ -162,6 +253,13 @@ uploaded_file = st.file_uploader(
     "Upload a CMS-style provider-service CSV file",
     type=["csv"]
 )
+
+
+# Show expected schema to the user
+
+with st.expander("View required upload columns"):
+    st.write("Your CSV must include these 13 raw columns:")
+    st.code("\n".join(required_columns))
 
 
 # Run scoring workflow after upload
@@ -176,22 +274,48 @@ if uploaded_file is not None:
     st.dataframe(input_df.head())
 
 
-    # Validate required columns
+    # Check required columns
 
-    missing_columns = [col for col in required_columns if col not in input_df.columns]
+    columns_valid, missing_columns = validate_required_columns(input_df)
 
-    if missing_columns:
+    if not columns_valid:
         st.error("The uploaded file is missing required columns:")
         st.write(missing_columns)
         st.stop()
 
 
-    # Create model-ready features
+    # Keep only required raw columns and convert datatypes
 
-    model_input = create_model_features(input_df)
+    cleaned_df = input_df[required_columns].copy()
+    cleaned_df = convert_datatypes(cleaned_df)
 
 
-    # Generate reimbursement-risk probabilities
+    # Validate numeric conversion
+
+    numeric_valid, invalid_numeric_columns = validate_numeric_values(cleaned_df)
+
+    if not numeric_valid:
+        st.error("Some numeric columns contain invalid or missing values after conversion.")
+        st.write(invalid_numeric_columns)
+        st.stop()
+
+
+    # Validate non-negative values
+
+    non_negative_valid, negative_counts = validate_non_negative_values(cleaned_df)
+
+    if not non_negative_valid:
+        st.error("Some numeric columns contain negative values, which are not valid for this scoring workflow.")
+        st.write(negative_counts)
+        st.stop()
+
+
+    # Create final model features
+
+    model_input = create_model_features(cleaned_df, top_hcpcs_codes)
+
+
+    # Generate risk probabilities
 
     risk_probabilities = model.predict_proba(model_input)[:, 1]
 
@@ -201,7 +325,7 @@ if uploaded_file is not None:
     risk_predictions = (risk_probabilities >= threshold).astype(int)
 
 
-    # Add model outputs to the original uploaded data
+    # Add results to original uploaded data
 
     results_df = input_df.copy()
     results_df["predicted_high_risk_probability"] = risk_probabilities
@@ -246,7 +370,7 @@ if uploaded_file is not None:
     st.dataframe(highest_risk_df)
 
 
-    # Show risk distribution by label
+    # Show risk label distribution
 
     st.write("### Risk Label Distribution")
 
@@ -309,7 +433,7 @@ if uploaded_file is not None:
     )
 
 
-    # Show top high-risk HCPCS codes
+    # Show top 20 high-risk HCPCS codes
 
     st.write("### Top 20 High-Risk HCPCS Codes")
 
@@ -332,7 +456,7 @@ if uploaded_file is not None:
     )
 
 
-    # Add probability distribution
+    # Show sorted probability curve
 
     st.write("### Predicted Risk Probability Distribution")
 
@@ -358,6 +482,6 @@ if uploaded_file is not None:
 
 else:
 
-    # Show upload instructions before file is uploaded
+    # Show instruction before a file is uploaded
 
     st.info("Upload a CSV file to generate reimbursement-risk scores.")
