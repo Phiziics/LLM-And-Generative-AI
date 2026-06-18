@@ -1,0 +1,7 @@
+CMS review reason codes explain why a claim, prior authorization, or medical review request may be denied or non-affirmed.
+
+Common review issues include missing documentation, insufficient medical necessity support, incorrect coding, missing physician orders, duplicate billing, incomplete records, and services that do not meet coverage criteria.
+
+Billing teams should verify that the submitted HCPCS or CPT code is supported by documentation, diagnosis information, place of service, and payer coverage requirements.
+
+For high-risk claims, staff should review the medical record, confirm that the service was reasonable and necessary, check coding accuracy, and verify that all required documentation is present before submission or appeal.
