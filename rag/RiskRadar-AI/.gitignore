@@ -12,5 +12,4 @@ data/vectorstore/
 *.joblib
 *.sqlite
 *.db
-
 .DS_Store
