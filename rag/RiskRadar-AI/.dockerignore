@@ -1,0 +1,49 @@
+# Virtual environment
+.venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Jupyter cache
+.ipynb_checkpoints/
+
+# Pytest cache
+.pytest_cache/
+
+# Git files
+.git/
+.gitignore
+
+# Environment secrets
+.env
+
+# Raw and generated data
+# These will be mounted at runtime instead
+data/raw/
+data/processed/
+data/vectorstore/
+
+# Notebook files are not needed inside production containers
+notebooks/
+
+# Tests are not needed inside runtime containers
+tests/
+
+# Local reports
+reports/
+
+# IDE files
+.vscode/
+.idea/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Python build outputs
+build/
+dist/
+*.egg-info/

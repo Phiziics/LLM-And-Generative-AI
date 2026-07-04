@@ -1,0 +1,35 @@
+# Use Python 3.10 to match the project environment
+FROM python:3.10-slim
+
+# Set the working directory
+WORKDIR /app
+
+# Prevent Python from writing .pyc files
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Ensure Python logs appear immediately
+ENV PYTHONUNBUFFERED=1
+
+# Copy dependency file first for Docker caching
+COPY requirements.txt .
+
+# Upgrade pip
+RUN pip install --no-cache-dir --upgrade pip
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy Streamlit application files
+COPY app ./app
+
+# Expose Streamlit port
+EXPOSE 8501
+
+# Start Streamlit
+CMD [
+    "streamlit",
+    "run",
+    "app/streamlit_app.py",
+    "--server.address=0.0.0.0",
+    "--server.port=8501"
+]

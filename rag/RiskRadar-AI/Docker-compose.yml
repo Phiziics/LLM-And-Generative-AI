@@ -1,0 +1,67 @@
+services:
+  api:
+    # Build FastAPI using the API Dockerfile
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+
+    # Give the container a readable name
+    container_name: riskradar-api
+
+    # Map local port 8000 to container port 8000
+    ports:
+      - "8000:8000"
+
+    # Environment settings
+    environment:
+      # Ollama is running on the Windows host
+      OLLAMA_URL: "http://host.docker.internal:11434/api/generate"
+
+      # Default local model
+      OLLAMA_MODEL: "llama3.2:3b"
+
+      # Hugging Face cache location
+      HF_HOME: "/root/.cache/huggingface"
+
+    # Mount generated project data into the container
+    volumes:
+      - ./data:/app/data
+
+      # Persist downloaded Hugging Face models
+      - huggingface-cache:/root/.cache/huggingface
+
+    # Allow container to reach services running on host
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    # Restart automatically unless manually stopped
+    restart: unless-stopped
+
+  streamlit:
+    # Build Streamlit using its Dockerfile
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+
+    # Give the container a readable name
+    container_name: riskradar-streamlit
+
+    # Map local port 8501 to container port 8501
+    ports:
+      - "8501:8501"
+
+    # Tell Streamlit to call FastAPI by Docker service name
+    environment:
+      RISKRADAR_API_URL: "http://api:8000"
+
+    # Start after API container is started
+    depends_on:
+      - api
+
+    # Restart automatically unless manually stopped
+    restart: unless-stopped
+
+
+# Named Docker volumes
+volumes:
+  huggingface-cache:

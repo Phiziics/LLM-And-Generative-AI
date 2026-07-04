@@ -1,3 +1,6 @@
+# Import operating system tools for environment variables
+import os
+
 # Import requests for calling local Ollama
 import requests
 
@@ -19,20 +22,34 @@ class RiskRadarGenerator:
 
     def __init__(
         self,
-        ollama_url="http://localhost:11434/api/generate",
-        ollama_model="llama3.2:3b"
+        ollama_url=None,
+        ollama_model=None
     ):
         """
         Initialize generator settings.
+
+        Environment variables allow the same code to work:
+        - locally
+        - inside Docker
         """
 
-        # Store local Ollama endpoint
-        self.ollama_url = ollama_url
+        # Read Ollama URL from environment if not passed directly
+        self.ollama_url = ollama_url or os.getenv(
+            "OLLAMA_URL",
+            "http://localhost:11434/api/generate"
+        )
 
-        # Store local Ollama model name
-        self.ollama_model = ollama_model
+        # Read Ollama model name from environment if not passed directly
+        self.ollama_model = ollama_model or os.getenv(
+            "OLLAMA_MODEL",
+            "llama3.2:3b"
+        )
 
-    def format_evidence_for_prompt(self, evidence_records, max_chars_per_chunk=900):
+    def format_evidence_for_prompt(
+        self,
+        evidence_records,
+        max_chars_per_chunk=900
+    ):
         """
         Format retrieved SEC evidence records for the prompt.
 
@@ -53,7 +70,9 @@ class RiskRadarGenerator:
             source_number = index + 1
 
             # Shorten chunk text so local generation is faster
-            chunk_text = str(row.get("chunk_text", ""))[:max_chars_per_chunk]
+            chunk_text = str(
+                row.get("chunk_text", "")
+            )[:max_chars_per_chunk]
 
             # Get citation metadata
             citation_label = row.get("citation_label", "")
@@ -73,10 +92,14 @@ Text:
 """
 
             # Store evidence block
-            evidence_blocks.append(evidence_block.strip())
+            evidence_blocks.append(
+                evidence_block.strip()
+            )
 
         # Join evidence blocks
-        formatted_evidence = "\n\n---\n\n".join(evidence_blocks)
+        formatted_evidence = "\n\n---\n\n".join(
+            evidence_blocks
+        )
 
         # Return formatted evidence
         return formatted_evidence
@@ -105,7 +128,12 @@ Text:
         # Return sources
         return sources
 
-    def build_rag_prompt(self, question, evidence_records, financial_context=None):
+    def build_rag_prompt(
+        self,
+        question,
+        evidence_records,
+        financial_context=None
+    ):
         """
         Build a grounded RAG prompt.
 
@@ -115,7 +143,9 @@ Text:
         """
 
         # Format retrieved evidence
-        formatted_evidence = self.format_evidence_for_prompt(evidence_records)
+        formatted_evidence = self.format_evidence_for_prompt(
+            evidence_records
+        )
 
         # Build financial context block only if provided
         if financial_context:
@@ -159,7 +189,10 @@ Answer:
         # Return clean prompt
         return prompt.strip()
 
-    def test_ollama_connection(self, timeout_seconds=60):
+    def test_ollama_connection(
+        self,
+        timeout_seconds=60
+    ):
         """
         Test whether Ollama is running and the selected model responds.
         """
@@ -194,7 +227,11 @@ Answer:
             return {
                 "ok": True,
                 "model": self.ollama_model,
-                "response": result.get("response", "").strip()
+                "url": self.ollama_url,
+                "response": result.get(
+                    "response",
+                    ""
+                ).strip()
             }
 
         # Handle errors safely
@@ -202,6 +239,7 @@ Answer:
             return {
                 "ok": False,
                 "model": self.ollama_model,
+                "url": self.ollama_url,
                 "error": str(error)
             }
 
@@ -243,7 +281,10 @@ Answer:
             result = response.json()
 
             # Return generated answer
-            return result.get("response", "").strip()
+            return result.get(
+                "response",
+                ""
+            ).strip()
 
         # Handle timeout clearly
         except requests.exceptions.ReadTimeout:
@@ -303,7 +344,9 @@ Answer:
         end_time = time.time()
 
         # Build clean source list
-        sources = self.format_sources(evidence_records)
+        sources = self.format_sources(
+            evidence_records
+        )
 
         # Return answer package
         return {
@@ -313,5 +356,8 @@ Answer:
             "financial_context": financial_context,
             "financial_context_used": financial_context is not None,
             "prompt": prompt,
-            "generation_time_seconds": round(end_time - start_time, 2)
+            "generation_time_seconds": round(
+                end_time - start_time,
+                2
+            )
         }

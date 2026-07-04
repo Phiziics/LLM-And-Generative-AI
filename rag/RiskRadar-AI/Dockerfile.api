@@ -1,0 +1,45 @@
+# Use Python 3.10 to match the local project environment
+FROM python:3.10-slim
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Prevent Python from writing .pyc files
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Ensure Python logs appear immediately
+ENV PYTHONUNBUFFERED=1
+
+# Install system build dependencies
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy dependency file first for Docker layer caching
+COPY requirements.txt .
+
+# Upgrade pip
+RUN pip install --no-cache-dir --upgrade pip
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy reusable source modules
+COPY src ./src
+
+# Copy FastAPI application files
+COPY app ./app
+
+# Expose FastAPI port
+EXPOSE 8000
+
+# Start the FastAPI backend
+CMD [
+    "uvicorn",
+    "app.main:app",
+    "--host",
+    "0.0.0.0",
+    "--port",
+    "8000"
+]
